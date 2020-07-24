@@ -16,7 +16,7 @@
  */
 
 import XCTest
-@testable import LibPNG
+@testable import PNG
 
 final class LibPNGTests: XCTestCase {
     func testWriteGreyscaleImage() {
@@ -29,7 +29,7 @@ final class LibPNGTests: XCTestCase {
         }
         
         let image = try! Image(width: 300, height: 200, colorType: ColorType.greyscale, bitDepth: 8, pixels: pixels)
-        try! image.write(to: URL(string: "/tmp/greyscaleImage.png")!)
+        try! image.write(to: URL(fileURLWithPath: "/tmp/greyscaleImage.png"))
     }
 
     func testWriteDoubleImage() {
@@ -42,7 +42,7 @@ final class LibPNGTests: XCTestCase {
         }
         
         let image = try! Image(width: 300, height: 200, colorType: .greyscale, pixelValues: pixels)
-        try! image.write(to: URL(string: "/tmp/greyscaleDoubleNormalisaedImage.png")!)
+        try! image.write(to: URL(fileURLWithPath: "/tmp/greyscaleDoubleNormalisaedImage.png"))
     }
 
     func testWriteDoubleColoredImage() {
@@ -63,7 +63,7 @@ final class LibPNGTests: XCTestCase {
         }
         
         let image = try! Image(width: 300, height: 200, colorType: .rgb, pixelValues: pixels)
-        try! image.write(to: URL(string: "/tmp/greyscaleDoubleColoredNormalisaedImage.png")!)
+        try! image.write(to: URL(fileURLWithPath: "/tmp/greyscaleDoubleColoredNormalisaedImage.png"))
     }
     
     func testGetImageData() {

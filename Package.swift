@@ -4,14 +4,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "LibPNG",
+    name: "swift-png",
     products: [
-        .library(name: "LibPNG", targets: ["LibPNG"]),
+        .library(name: "PNG", targets: ["PNG"]),
     ],
     dependencies: [],
     targets: [
-        .systemLibrary(name: "CPNG", path: "Library/CPNG", pkgConfig: "libpng", providers: [ .brew(["libpng"]), .apt(["libpng-dev"])]),
-        .target(name: "LibPNG", dependencies: ["CPNG"]),
-        .testTarget(name: "LibPNGTests", dependencies: ["LibPNG"]),
+        .systemLibrary(name: "ClibPNG", path: "Library/ClibPNG", pkgConfig: "libpng", providers: [ .brew(["libpng"]), .apt(["libpng-dev"])]),
+        .target(name: "PNG", dependencies: ["ClibPNG"]),
+        .testTarget(name: "LibPNGTests", dependencies: ["PNG"]),
     ]
 )

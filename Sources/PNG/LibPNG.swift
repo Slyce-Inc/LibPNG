@@ -16,7 +16,7 @@
  */
 
 import Foundation
-import CPNG
+import ClibPNG
 
 public typealias Pixel = UInt8
 
@@ -182,6 +182,6 @@ extension Image {
     guard let data = self.data else {
       throw LibPNGError.writeError
     }
-    data.write(to: url)
+    try data.write(to: url)
   }
 }
