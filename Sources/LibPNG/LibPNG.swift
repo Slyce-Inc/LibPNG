@@ -64,8 +64,8 @@ public enum ColorType: Int32, RawRepresentable {
 
 public func encode(image: UnsafeBufferPointer<UInt8>, width: Int, height: Int, bitDepth: Int, colorType: ColorType) -> Data? {
   var imageData = Data()
-  let pngPtr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nil, nil, nil)
-  guard let ptr = pngPtr else {
+
+  guard let ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nil, nil, nil) else {
       return nil
   }
   
@@ -178,37 +178,10 @@ public class Image {
 }
 
 extension Image {
-    
-    public func write(to url: URL) throws {
-        
-        let fp = fopen(url.relativeString, "wb")
-        let pngPtr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nil, nil, nil)
-        guard let ptr = pngPtr else {
-            throw LibPNGError.writeError
-        }
-        
-        let info_ptr = png_create_info_struct(ptr)
-        png_init_io(ptr, fp)
-        png_set_IHDR(ptr,
-                     info_ptr,
-                     png_uint_32(width),
-                     png_uint_32(height),
-                     Int32(bitDepth),
-                     colorType.rawValue,
-                     PNG_INTERLACE_NONE,
-                     PNG_COMPRESSION_TYPE_DEFAULT,
-                     PNG_FILTER_TYPE_DEFAULT)
-        
-        png_write_info(ptr, info_ptr)
-        
-        for rowNumber in 0..<height {
-            let rowWidth = width * colorType.components
-            let startPixelIndex = rowNumber * rowWidth
-            let endPixelIndex = rowNumber * rowWidth + rowWidth
-            let row = pixels[startPixelIndex..<endPixelIndex]
-            png_write_row(ptr, Array(row))
-        }
-        png_write_end(ptr, nil);
-        fclose(fp)
+  public func write(to url: URL) throws {
+    guard let data = self.data else {
+      throw LibPNGError.writeError
     }
+    data.write(to: url)
+  }
 }
