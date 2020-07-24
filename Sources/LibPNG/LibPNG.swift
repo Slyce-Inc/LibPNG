@@ -62,6 +62,45 @@ public enum ColorType: Int32, RawRepresentable {
     }
 }
 
+public func encode(image: UnsafeBufferPointer<UInt8>, width: Int, height: Int, bitDepth: Int, colorType: ColorType) -> Data? {
+  var imageData = Data()
+  let pngPtr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nil, nil, nil)
+  guard let ptr = pngPtr else {
+      return nil
+  }
+  
+  let info_ptr = png_create_info_struct(ptr)
+  png_set_IHDR(ptr,
+                info_ptr,
+                png_uint_32(width),
+                png_uint_32(height),
+                Int32(bitDepth),
+                colorType.rawValue,
+                PNG_INTERLACE_NONE,
+                PNG_COMPRESSION_TYPE_DEFAULT,
+                PNG_FILTER_TYPE_DEFAULT)
+  
+  png_set_write_fn(ptr, &imageData, { (pngPointer, data, length) in
+      guard let container: UnsafeMutableRawPointer = png_get_io_ptr(pngPointer) else { return }
+      guard let data = data else { return }
+      
+      let dataContainer = container.assumingMemoryBound(to: Data.self)
+      dataContainer.pointee.append(data, count: length)
+  }, nil)
+  png_write_info(ptr, info_ptr)
+  //        png_write_png(ptr, info_ptr, PNG_TRANSFORM_IDENTITY, nil)
+  
+
+  let pixels = image.baseAddress!
+  let rowWidth = width * colorType.components
+  for rowOffset in stride(from: 0, to: height * rowWidth, by: rowWidth) {
+      png_write_row(ptr, pixels + rowOffset)
+  }
+
+  png_write_end(ptr, nil);
+  return imageData
+}
+
 public class Image {
     
     var width: Int
@@ -131,45 +170,10 @@ public class Image {
         
     }
     
-    public lazy var data: Data? = {
-        var imageData = Data()
-        let pngPtr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nil, nil, nil)
-        guard let ptr = pngPtr else {
-            return nil
-        }
-        
-        let info_ptr = png_create_info_struct(ptr)
-        png_set_IHDR(ptr,
-                     info_ptr,
-                     png_uint_32(width),
-                     png_uint_32(height),
-                     Int32(bitDepth),
-                     colorType.rawValue,
-                     PNG_INTERLACE_NONE,
-                     PNG_COMPRESSION_TYPE_DEFAULT,
-                     PNG_FILTER_TYPE_DEFAULT)
-        
-        let callback: @convention(c) (png_structp?, png_bytep?, png_size_t) -> Void = { (pngPointer: png_structp?, data: png_bytep?, length: png_size_t) in
-            guard let container: UnsafeMutableRawPointer = png_get_io_ptr(pngPointer) else { return }
-            guard let data = data else { return }
-            
-            let dataContainer = container.assumingMemoryBound(to: Data.self)
-            dataContainer.pointee.append(data, count: length)
-        }
-        
-        png_set_write_fn(ptr, &imageData, callback, nil)
-        png_write_info(ptr, info_ptr)
-        //        png_write_png(ptr, info_ptr, PNG_TRANSFORM_IDENTITY, nil)
-        
-        for rowNumber in 0..<height {
-            let rowWidth = width * colorType.components
-            let startPixelIndex = rowNumber * rowWidth
-            let endPixelIndex = rowNumber * rowWidth + rowWidth
-            let row = pixels[startPixelIndex..<endPixelIndex]
-            png_write_row(ptr, Array(row))
-        }
-        png_write_end(ptr, nil);
-        return imageData
+    public lazy var data: Data? = { 
+      return pixels.withUnsafeBufferPointer {
+        return encode(image: $0, width:self.width, height: self.height, bitDepth: self.bitDepth, colorType: self.colorType)
+      }
     }()
 }
 
